@@ -39,26 +39,37 @@ Chroot created: new-chroot
 ===========================================================
 ```
 
+```shell
 # chmgr list
 Target                         Protected Services Created                     
 ============================== ========= ======== ============================
 test                           no        0        Sat Nov 10 22:17:38 CET 2012
 new-chroot                     no        0        Wed Mar 6 21:18:00 CET 2013
+```
 
+```shell
 # chmgr install -t new-chroot -i tcpdump mtr
 * Installing packages ... done
+```
 
+```shell
 # chmgr login -t new-chroot
 new-chroot# exit
+```
 
+```shell
 # chmgr protect -t new-chroot
+```
 
+```shell
 # chmgr run -t new-chroot -c "ls /tmp/test-file; touch /tmp/test-file; ls /tmp/test-file; rm /tmp/test-file"
 
 drwxr-xr-x 16 root root 4096 Nov 10 22:18 /var
 
 exit code: 0
+```
 
+```shell
 # chmgr service -t new-chroot 
 Services for: new-chroot
 ====================
@@ -71,12 +82,18 @@ new-chroot: Added service /etc/init.d/httpd
 Services for: new-chroot
 ====================
 /etc/init.d/httpd
+```
 
+```shell
 # chmgr start -t new-chroot
 * Target started
+```
 
+```shell
 # chmgr stop -t new-chroot
+```
 
+```shell
 # chmgr delete -t new-chroot
 error: Protected environment new-chroot
 
@@ -84,8 +101,9 @@ error: Protected environment new-chroot
 
 # chmgr delete -t new-chroot
 Deleting target new-chroot ... done
+```
 
 TODO
 =====
-[ ] Add inter-chroot dependancy during startup. E.g. chrootB depends on chrootA already running.
-[ ] Update chroot
+- [ ] Add inter-chroot dependancy during startup. E.g. chrootB depends on chrootA already running.
+- [ ] Update chroot

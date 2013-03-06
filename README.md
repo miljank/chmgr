@@ -10,6 +10,7 @@ Another use case are public facing services where chroots provide additional lev
 Usage
 =====
 
+```shell
 # chmgr 
     backup		Creates a configuration backup of a target
     create		Creates a target
@@ -22,7 +23,9 @@ Usage
     service		Manages automatic stop/start of the services in the target
     start		Start a target
     stop		Stop a target
+```
 
+```shell
 # chmgr create -t new-chroot 
 ===========================================================
 Creating target new-chroot
@@ -34,6 +37,7 @@ Creating target new-chroot
 ===========================================================
 Chroot created: new-chroot
 ===========================================================
+```
 
 # chmgr list
 Target                         Protected Services Created                     

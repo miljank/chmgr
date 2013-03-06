@@ -1,0 +1,37 @@
+#!/bin/sh
+# chkconfig: - 92 08
+# description: Start/stop chroot environments
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin
+
+ROOT=/chroot
+CHROOTS=$(get_chroot_order.py)
+
+chroots() {
+    if [[ ${action} == "start" ]]; then
+        CHROOTS=$(get_chroot_order.py)
+        cmd="chmgr start -t"
+        msg=Starting
+    else
+        CHROOTS=$(get_chroot_order.py -r)
+        cmd="chmgr stop -t"
+        msg=Stopping
+    fi
+    for chroot in ${CHROOTS}; do
+        echo "* ${msg} chroot ${chroot}"
+        if [[ -f ${ROOT}/${chroot}/.services ]]; then
+            cat ${ROOT}/${chroot}/.services | while read service; do
+                chroot ${ROOT}/${chroot} ${service} ${action}
+            done
+        fi
+        ${cmd} ${chroot}
+    done
+}
+
+action=$1
+
+case ${action} in
+    start) chroots;;
+    stop) chroots;;
+    *) echo "Usage: $0 'start|stop'"; exit 1;;
+esac

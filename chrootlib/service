@@ -1,0 +1,64 @@
+NAME="service"
+DESC="Manages automatic stop/start of the services in the target"
+
+service_parse_input() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            '-t') SHORTNAME=$2; TARGET=${CHROOTDIR}/$2; shift;;
+            '-a') SERVICE=$2; shift;;
+            '-r') REMOVE=$2; shift;;
+            '-h') service_help;;
+               *) echo "error: Unknown argument"; exit 1;;
+        esac
+        shift
+    done
+    [[ -z ${TARGET} ]] && echo "error: Target is required" && service_help
+    [[ ! -d ${TARGET} ]] && echo "error: Target does not exist" && exit 1
+}
+
+service_help() {
+    echo "Usage: $(basename $0) service -t <TARGET> [-a <SERVICE>] [-r <SERVICE>] [-h]"
+    echo
+    echo "Manages automatic stop/start of the services in the target"
+    echo -e "-t\tTarget environment"
+    echo -e "-a\tAdds a service"
+    echo -e "-r\tRemoves a service"
+    echo -e "-h\tThis help message"
+    echo
+    exit 1
+}
+
+service() {
+    CONF=${TARGET}/.services
+
+    if [[ -n ${SERVICE} ]]; then
+        echo ${SERVICE} | grep '/' 1>/dev/null 2>/dev/null || SERVICE=/etc/init.d/${SERVICE}
+
+        [[ ! -f ${TARGET}/${SERVICE} ]] && \
+        echo "error: Service ${SERVICE} does not exists" && \
+        exit 1
+
+        grep -w ${SERVICE} ${CONF} 1>/dev/null 2>&1 && \
+        echo "error: Service ${SERVICE} already added" && \
+        exit 1
+
+        echo ${SERVICE} >>${CONF}        
+        echo "${SHORTNAME}: Added service ${SERVICE}"
+    elif [[ -n ${REMOVE} ]]; then
+        echo ${REMOVE} | grep '/' 1>/dev/null 2>/dev/null || REMOVE=/etc/init.d/${REMOVE}
+
+        if ! grep -w ${REMOVE} ${CONF} 1>/dev/null 2>&1; then
+            echo "error: Service ${REMOVE} is not added"
+            exit 1
+        fi
+
+        grep -wv ${REMOVE} ${CONF} >/tmp/${SHORTNAME}.service.$$
+        mv /tmp/${SHORTNAME}.service.$$ ${CONF}
+        echo "${SHORTNAME}: Removed service ${REMOVE}"
+    else
+        echo "Services for: ${SHORTNAME}"
+        echo "===================="
+        [[ -s ${CONF} ]] && cat ${CONF} && echo || echo -e "No services defined"
+    fi
+    exit 0
+}

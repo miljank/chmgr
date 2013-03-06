@@ -1,0 +1,31 @@
+#!/bin/sh
+
+CHROOTDIR=/chroot
+CHROOTLIB=/usr/local/lib/chrootlib
+
+load_data() {
+    for module in ${CHROOTLIB}/*; do
+        . ${module}
+        [[ -z "${help}" ]] || echo -e "    ${NAME}\t\t${DESC}"
+    done
+    [[ -z "${help}" ]] || exit 0
+}
+
+check_status() {
+    rc=$1
+    msg=$2
+    [[ ${rc} != 0 ]] && echo "Erorr: ${msg}" && exit ${rc}
+    return 0
+}
+
+ACTION=$1
+[[ -z ${ACTION} ]] || [[ "${ACTION}" == "-h" ]] && help=true
+
+load_data
+
+declare -F ${ACTION} 1>/dev/null
+[[ $? != 0 ]] && echo "error: Action not defined" && exit 1
+
+shift
+${ACTION}_parse_input $@
+${ACTION}

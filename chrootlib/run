@@ -1,0 +1,42 @@
+NAME="run   "
+DESC="Run a command in target"
+TMPFILE=/tmp/run-cmd.sh
+
+run_parse_input() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            '-t') SHORTNAME=$2; TARGET=${CHROOTDIR}/$2; shift;;
+            '-c') shift; COMMAND=$@; break;;
+            '-h') run_help;;
+               *) echo "error: Unknown argument"; exit 1;;
+        esac
+        shift
+    done
+    [[ -z ${TARGET} ]]   && echo "error: Target is required"    && run_help
+    [[ -z ${COMMAND} ]]  && echo "error: Command is required"   && exit 1
+    [[ ! -d ${TARGET} ]] && echo "error: Target does not exist" && exit 1
+}
+
+run_help() {
+    echo "Usage: $(basename $0) run -t <TARGET> -c <COMMAND LIST> [-h]"
+    echo
+    echo "Runs a command in target"
+    echo -e "-t\tTarget environment"
+    echo -e "-c\tCommand list"
+    echo -e "-h\tThis help message"
+    echo
+    exit 1
+}
+
+run() {
+    echo "#!/bin/bash" >${TARGET}/${TMPFILE}
+    echo ${COMMAND} >>${TARGET}/${TMPFILE}
+    chmod +x ${TARGET}/${TMPFILE}
+    echo
+    chroot ${TARGET} ${TMPFILE}
+    rc=$?
+    rm -f ${TARGET}/${TMPFILE}
+    echo
+    echo "exit code: ${rc}"
+    exit $?
+}

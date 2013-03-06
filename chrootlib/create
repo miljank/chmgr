@@ -1,0 +1,61 @@
+NAME="create"
+DESC="Creates a target"
+
+create_parse_input() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            '-t') SHORTNAME=$2; TARGET=${CHROOTDIR}/$2; shift;;
+            '-h') create_help;;
+               *) echo "error: Unknown argument"; exit 1;;
+        esac
+        shift
+    done
+    [[ -z ${TARGET} ]] && echo "error: Target is required"    && create_help
+    [[ -d ${TARGET} ]] && echo "error: Target already exists" && exit 1
+}
+
+create_help() {
+    echo "Usage: $(basename $0) create -t <TARGET> [-h]"
+    echo
+    echo "Creates a target"
+    echo -e "-t\tTarget environment"
+    echo -e "-h\tThis help message"
+    echo
+    exit 1
+}
+
+create() {
+    echo "==========================================================="
+    echo "Creating target ${SHORTNAME}"
+    echo "==========================================================="
+    echo
+    echo "* Initializing"
+    mkdir -p ${TARGET}/{etc/yum.repos.d,var/lib/rpm} 2>/dev/null
+    rpm --root ${TARGET} --initdb 1>/dev/null
+    check_status $? "Could not initialize RPM database"
+
+    [[ -f /usr/bin/yumdownloader ]] || yum -y install yum-downloadonly.noarch 1>/dev/null
+    check_status $? "Could not install yumdownloader"
+
+    yumdownloader --destdir=/var/tmp fedora-release 1>/dev/null
+    check_status $? "Could not download OS release"
+
+    rpm --root ${TARGET} -ivh --nodeps /var/tmp/fedora-release*.rpm 1>/dev/null 2>&1
+    check_status $? "Could not install OS release"
+    rm -f /var/tmp/fedora-release*.rpm
+
+    rm -f ${TARGET}/etc/yum.repos.d/*
+    cp /etc/yum.repos.d/* ${TARGET}/etc/yum.repos.d/
+    cp /etc/resolv.conf ${TARGET}/etc/resolv.conf
+
+    cp /etc/localtime ${TARGET}/etc/
+
+    start
+
+    echo
+    echo "==========================================================="
+    echo "Chroot created: ${SHORTNAME}"
+    echo "==========================================================="
+
+    echo "${SHORTNAME};$(date)" >>${LIST}
+}

@@ -1,0 +1,33 @@
+NAME="protect"
+DESC="Protects a target"
+
+protect_parse_input() {
+    while [ $# -gt 0 ]; do
+        case $1 in
+            '-t') SHORTNAME=$2; TARGET=${CHROOTDIR}/$2; shift;;
+            '-r') reverse=true;;
+            '-h') protect_help;;
+               *) echo "error: Unknown argument"; exit 1;;
+        esac
+        shift
+    done
+    [[ -z ${TARGET} ]] && echo "error: Target is required" && protect_help
+    [[ ! -d ${TARGET} ]] && echo "error: Target does not exist" && exit 1
+}
+
+protect_help() {
+    echo "Usage: $(basename $0) protect -t <TARGET> [-r] [-h]"
+    echo
+    echo "Protects a target"
+    echo -e "-t\tTarget environment"
+    echo -e "-r\tRemoves protection"
+    echo -e "-h\tThis help message"
+    echo
+    exit 1
+}
+
+protect() {
+    [[ -z ${reverse} ]] && touch ${TARGET}/.protect
+    [[ -n ${reverse} ]] && rm -f ${TARGET}/.protect
+    exit 0
+}
